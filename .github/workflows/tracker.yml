@@ -2,21 +2,21 @@ name: BGL Price Tracker
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # Berjalan setiap 30 menit
-  workflow_dispatch: # Memungkinkan kamu menjalankan script secara manual
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   scrape-and-save:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Wajib agar bot bisa push data.json
+      contents: write
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
@@ -30,6 +30,15 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Tambahkan file yang mau dicek
           git add data.json
-          git commit -m "update: harga BGL terbaru" || echo "Tidak ada perubahan harga"
-          git push
+          
+          # Cek apakah ada data yang berubah
+          if git diff --staged --quiet; then
+            echo "Harga BGL belum berubah, bot tidak melakukan push."
+          else
+            git commit -m "update: harga BGL terbaru"
+            git pull --rebase origin main
+            git push
+          fi

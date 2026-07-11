@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGL Price Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #ffffff; padding: 20px; }
+        .dashboard { display: flex; gap: 20px; margin-bottom: 20px; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #333; }
+        .price { font-size: 24px; font-weight: bold; color: #4caf50; }
+        .container { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+    <h2>📊 Growtopia BGL Market Tracker</h2>
+    
+    <div class="dashboard">
+        <div class="card">
+            <h3>Harga Termurah</h3>
+            <div class="price" id="val-min">Rp -</div>
+        </div>
+        <div class="card">
+            <h3>Rata-rata Harga</h3>
+            <div class="price" id="val-avg" style="color: #ffeb3b;">Rp -</div>
+        </div>
+        <div class="card">
+            <h3>Harga Tertinggi</h3>
+            <div class="price" id="val-max" style="color: #f44336;">Rp -</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <canvas id="priceChart" width="400" height="150"></canvas>
+    </div>
+
+    <script>
+        // Mengambil data JSON yang digenerate oleh GitHub Actions
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const latest = data[data.length - 1];
+                
+                // Update kartu angka di atas
+                document.getElementById('val-min').innerText = `Rp ${latest.min.toLocaleString('id-ID')}`;
+                document.getElementById('val-avg').innerText = `Rp ${latest.avg.toLocaleString('id-ID')}`;
+                document.getElementById('val-max').innerText = `Rp ${latest.max.toLocaleString('id-ID')}`;
+
+                // Siapkan data untuk grafik
+                const labels = data.map(d => new Date(d.timestamp).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }));
+                const minPrices = data.map(d => d.min);
+                const avgPrices = data.map(d => d.avg);
+
+                // Render Chart.js
+                const ctx = document.getElementById('priceChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Harga Termurah (Support)',
+                                data: minPrices,
+                                borderColor: '#4caf50',
+                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Rata-rata Pasar',
+                                data: avgPrices,
+                                borderColor: '#ffeb3b',
+                                borderDash: [5, 5],
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: { ticks: { color: '#bbb' }, grid: { color: '#333' } },
+                            x: { ticks: { color: '#bbb' }, grid: { color: '#333' } }
+                        },
+                        plugins: { legend: { labels: { color: '#fff' } } }
+                    }
+                });
+            });
+    </script>
+</body>
+</html>

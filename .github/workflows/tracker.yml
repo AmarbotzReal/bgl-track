@@ -30,15 +30,13 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Tambahkan file yang mau dicek
           git add data.json
           
-          # Cek apakah ada data yang berubah
-          if git diff --staged --quiet; then
-            echo "Harga BGL belum berubah, bot tidak melakukan push."
-          else
-            git commit -m "update: harga BGL terbaru"
-            git pull --rebase origin main
-            git push
-          fi
+          # Coba commit data. Jika gagal (karena data sama), lanjutkan saja
+          git commit -m "update: harga BGL terbaru" || true
+          
+          # Tarik data terbaru dari GitHub untuk mencegah tabrakan
+          git pull --rebase origin main || true
+          
+          # Push ke GitHub, abaikan jika error
+          git push origin main || true

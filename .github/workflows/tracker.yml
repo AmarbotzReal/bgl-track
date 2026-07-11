@@ -2,7 +2,7 @@ name: BGL Price Tracker
 
 on:
   schedule:
-    - cron: '*/30 * * * *' # Berjalan setiap 30 menit
+    - cron: '*/5 * * * *' # Berjalan setiap 30 menit
   workflow_dispatch: # Memungkinkan kamu menjalankan script secara manual
 
 jobs:

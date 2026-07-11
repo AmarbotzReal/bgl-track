@@ -1,42 +1,50 @@
 name: BGL Price Tracker
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+schedule:
+- cron: '*/5 * * * *'
+workflow_dispatch:
 
 jobs:
-  scrape-and-save:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+scrape-and-save:
+runs-on: ubuntu-latest
+permissions:
+contents: write
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+    with:
+      fetch-depth: 0 
 
-      - name: Install Dependencies
-        run: npm install axios cheerio
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
 
-      - name: Jalankan Scraper
-        run: node scraper.js
+  - name: Install Dependencies
+    run: npm install axios cheerio
 
-      - name: Commit dan Push Data Terbaru
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json
-          
-          # Coba commit data. Jika gagal (karena data sama), lanjutkan saja
-          git commit -m "update: harga BGL terbaru" || true
-          
-          # Tarik data terbaru dari GitHub untuk mencegah tabrakan
-          git pull --rebase origin main || true
-          
-          # Push ke GitHub, abaikan jika error
-          git push origin main || true
+  - name: Jalankan Scraper
+    run: node scraper.js
+
+  - name: Commit dan Push Data Terbaru
+    run: |
+      git config --global user.name "github-actions[bot]"
+      git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
+      # Hanya tambahkan data.json
+      git add data.json
+      
+      # Jika tidak ada perubahan data, berhenti tanpa memunculkan error
+      if git diff --staged --quiet; then
+        echo "Data harga masih sama dengan sebelumnya. Tidak perlu push."
+        exit 0
+      fi
+      
+      git commit -m "update: harga BGL terbaru"
+      
+      # Tarik data terbaru dari GitHub untuk mencegah error 'rejected'
+      git pull --rebase origin main
+      
+      git push origin main

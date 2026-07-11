@@ -1,0 +1,35 @@
+name: BGL Price Tracker
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Berjalan setiap 30 menit
+  workflow_dispatch: # Memungkinkan kamu menjalankan script secara manual
+
+jobs:
+  scrape-and-save:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Wajib agar bot bisa push data.json
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install axios cheerio
+
+      - name: Jalankan Scraper
+        run: node scraper.js
+
+      - name: Commit dan Push Data Terbaru
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "update: harga BGL terbaru" || echo "Tidak ada perubahan harga"
+          git push
